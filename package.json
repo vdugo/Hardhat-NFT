@@ -14,7 +14,8 @@
     "solidity-coverage": "^0.7.21"
   },
   "dependencies": {
-    "@nomiclabs/hardhat-waffle": "^2.0.3"
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "@openzeppelin/contracts": "^4.7.2"
   },
   "overrides": {
     "@nomiclabs/hardhat-waffle": {
