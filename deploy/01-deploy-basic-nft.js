@@ -22,3 +22,5 @@ module.exports = async ({getNamedAccounts, deployments}) =>
         await verify(basicNFT.address, args)
     }
 }
+
+module.exports.tags = ["all", "basicnft", "main"]
