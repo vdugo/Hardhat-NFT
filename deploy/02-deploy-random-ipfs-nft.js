@@ -22,7 +22,11 @@ module.exports = async ({getNamedAccounts, deployments}) =>
     const { deploy, log } = deployments
     const { deployer } = await getNamedAccounts()
     const chainId = network.config.chainId
-    let tokenUris
+    let tokenUris = [
+        'ipfs://QmaVkBn2tKmjbhphU7eyztbvSQU5EXDdqRyXZtRhSGgJGo',
+        'ipfs://QmYQC5aGZu2PTH8XzbJrbDnvhj3gVs7ya33H9mqUNvST3d',
+        'ipfs://QmZYmH5iDbD6v3U2ixoVAjioSzvWJszDzYdbeCLquGSpVm'
+      ]
 
     if (process.env.UPLOAD_TO_PINATA == "true")
     {
@@ -31,7 +35,7 @@ module.exports = async ({getNamedAccounts, deployments}) =>
 
     let vrfCoordinatorV2Address, subscriptionId
 
-    if (!developmentChains.includes(network.name))
+    if (chainId === 31337)
     {
         const vrfCoordinatorV2Mock = await ethers.getContract("VRFCoordinatorV2Mock")
         vrfCoordinatorV2Address = vrfCoordinatorV2Mock.address
@@ -47,7 +51,28 @@ module.exports = async ({getNamedAccounts, deployments}) =>
 
     log('--------------------------------------------')
     await storeImages(imagesLocation)
-    //const args = [vrfCoordinatorV2Address, subscriptionId, networkConfig[chainId].gasLane, networkConfig[chainId].mintFee, networkConfig[chainId].callbackGasLimit]
+    const args = [
+        vrfCoordinatorV2Address,
+         subscriptionId, 
+         networkConfig[chainId].gasLane, 
+         networkConfig[chainId].callbackGasLimit,
+         tokenUris,
+         networkConfig[chainId].mintFee,
+    ]
+
+    const randomIpfsNft = await deploy("RandomIpfsNft", {
+        from: deployer,
+        args: args,
+        log: true,
+        waitConfirmations: network.config.blockConfirmations || 1
+    })
+
+    log('-----------------------------------------------------')
+    if (!developmentChains.includes(network.name) && process.env.ETHERSCAN_API_KEY)
+    {
+        log('verifying...')
+        await verify(randomIpfsNft.address, args)
+    }
 
 }
 
