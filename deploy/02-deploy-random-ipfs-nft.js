@@ -1,9 +1,21 @@
 const { network, ethers } = require('hardhat')
 const { developmentChains, networkConfig } = require('../helper-hardhat-config')
 const { verify } = require('../utils/verify')
-const { storeImages } = require('../utils/uploadToPinata')
+const { storeImages, storeTokenUriMetadata } = require('../utils/uploadToPinata')
 
 const imagesLocation = './images/randomNft'
+
+const metadataTemplate = {
+    name: "",
+    description: "",
+    image: "",
+    attributes: [
+        {
+            trait_type: "Cuteness",
+            value: 100,
+        }
+    ],
+}
 
 module.exports = async ({getNamedAccounts, deployments}) =>
 {
@@ -42,8 +54,27 @@ module.exports = async ({getNamedAccounts, deployments}) =>
 handleTokenUris = async () =>
 {
     tokenUris = []
+    // store the image in IPFS
+    // store the metadata in IPFS
+    const { responses: imageUploadResponses, files } = await storeImages(imagesLocation)
 
+    for (imageUploadResponseIndex in imageUploadResponses)
+    {
+        // create metadata
+        // upload metadata
+        let tokenUriMetadata = {...metadataTemplate}
+        tokenUriMetadata.name = files[imageUploadResponseIndex].replace(".png", "")
+        tokenUriMetadata.description = `An adorable ${tokenUriMetadata.name} pup!`
+        tokenUriMetadata.image = `ipfs://${imageUploadResponses[imageUploadResponseIndex].IpfsHash}`
+        console.log(`Uploading ${tokenUriMetadata.name}...`)
 
+        // store the JSON to Pinata / IPFS
+        const metadataUploadResponse = await storeTokenUriMetadata(tokenUriMetadata)
+        console.log(metadataUploadResponse)
+        tokenUris.push(`ipfs://${metadataUploadResponse.IpfsHash}`)
+    }
+    console.log("Token URIs uploaded:")
+    console.log(tokenUris)
     return tokenUris
 }
 
